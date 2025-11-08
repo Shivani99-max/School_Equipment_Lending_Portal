@@ -4,7 +4,7 @@ from db import get_db_connection
 
 equipment_bp = Blueprint("equipment_bp", __name__)
 
-@equipment_bp.route("/equipment", methods=["GET"])
+@equipment_bp.route("/equipments", methods=["GET"])
 def get_equipment():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

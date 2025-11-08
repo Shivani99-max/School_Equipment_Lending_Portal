@@ -19,7 +19,7 @@ export const api = {
   signup:  (name, email, password, role="student") =>
            jfetch("/signup",  { method: "POST", body: { name, email, password, role } }),
 
-  getEquipment: () => jfetch("/equipment"),
+  getEquipment: () => jfetch("/equipments"),
 
   borrow:  (user_id, equipment_id) =>
            jfetch("/request", { method: "POST", body: { user_id, equipment_id } }),
@@ -35,7 +35,7 @@ export const api = {
   getAllRequests: () => jfetch("/requests/all"),
   approveRequest: (id) => jfetch(`/requests/${id}/approve`, { method: "POST" }),
   rejectRequest:  (id) => jfetch(`/requests/${id}/reject`,  { method: "POST" }),
-  
+
   addEquipment: (payload) => jfetch("/equipment", { method: "POST", body: payload }),
   updateEquipment: (id, payload) =>
     jfetch(`${EQUIP_BASE}/${id}`, { method: "PUT", body: payload }),

@@ -245,7 +245,7 @@ export default function Equipment() {
   return (
     <div style={{display:"grid", gap:16}}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-        <h2 style={{margin:0}}>Equipment</h2>
+        <h2 style={{margin:0}}>Equipments</h2>
         {isAdmin && (
           <button onClick={() => setOpenAdd(true)} style={{border:"1px solid #111", borderRadius:8, padding:"8px 12px"}}>
             + Add Equipment
