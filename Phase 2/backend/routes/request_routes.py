@@ -113,3 +113,62 @@ def return_request(req_id):
     conn.commit()
     cursor.close(); conn.close()
     return jsonify({"message": "Item returned"}), 200
+
+
+
+@request_bp.route("/requests/all", methods=["GET"])
+def list_all_requests():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT r.*, e.name AS equipment_name, u.name AS user_name
+        FROM requests r
+        LEFT JOIN equipment e ON e.id = r.equipment_id
+        LEFT JOIN users u ON u.id = r.user_id
+        ORDER BY COALESCE(r.issue_date, NOW()) DESC, r.id DESC
+    """)
+    rows = cur.fetchall() or []
+    cur.close(); conn.close()
+    return jsonify(rows), 200
+
+
+# --- Approve a request
+@request_bp.route("/requests/<int:req_id>/approve", methods=["POST"])
+def approve_request(req_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # Only approve if currently pending
+    cur.execute("SELECT status FROM requests WHERE id=%s FOR UPDATE", (req_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close(); conn.close()
+        return jsonify({"error": "Request not found"}), 404
+    if row[0] != "pending":
+        cur.close(); conn.close()
+        return jsonify({"error": f"Cannot approve when status={row[0]}"}), 400
+    cur.execute("UPDATE requests SET status='approved' WHERE id=%s", (req_id,))
+    conn.commit()
+    cur.close(); conn.close()
+    return jsonify({"message": "Approved"}), 200
+
+# --- Reject a request (restore stock only if you had decremented on borrow-submit)
+@request_bp.route("/requests/<int:req_id>/reject", methods=["POST"])
+def reject_request(req_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # fetch equipment id + status
+    cur.execute("SELECT equipment_id, status FROM requests WHERE id=%s FOR UPDATE", (req_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close(); conn.close()
+        return jsonify({"error": "Request not found"}), 404
+    equipment_id, status = row
+    if status != "pending":
+        cur.close(); conn.close()
+        return jsonify({"error": f"Cannot reject when status={status}"}), 400
+    cur.execute("UPDATE requests SET status='rejected' WHERE id=%s", (req_id,))
+    # If you reduced stock during /borrow, consider restoring here:
+    # cur.execute("UPDATE equipment SET available_quantity = available_quantity + 1 WHERE id=%s", (equipment_id,))
+    conn.commit()
+    cur.close(); conn.close()
+    return jsonify({"message": "Rejected"}), 200

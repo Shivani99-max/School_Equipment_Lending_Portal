@@ -1,5 +1,6 @@
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:5000";
 const ADD_EQUIPMENT_PATH = "/equipement"; // backend currently spelled this way
+const EQUIP_BASE = "/equipment";
 
 async function jfetch(path, { method = "GET", body, headers } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -19,7 +20,6 @@ export const api = {
            jfetch("/signup",  { method: "POST", body: { name, email, password, role } }),
 
   getEquipment: () => jfetch("/equipment"),
-  addEquipment: (payload) => jfetch(ADD_EQUIPMENT_PATH, { method: "POST", body: payload }),
 
   borrow:  (user_id, equipment_id) =>
            jfetch("/request", { method: "POST", body: { user_id, equipment_id } }),
@@ -29,4 +29,16 @@ export const api = {
 
   returnMyRequest: (id) =>
     jfetch(`/requests/${id}/return`, { method: "POST" }),
+
+
+   // admin:
+  getAllRequests: () => jfetch("/requests/all"),
+  approveRequest: (id) => jfetch(`/requests/${id}/approve`, { method: "POST" }),
+  rejectRequest:  (id) => jfetch(`/requests/${id}/reject`,  { method: "POST" }),
+  
+  addEquipment: (payload) => jfetch("/equipment", { method: "POST", body: payload }),
+  updateEquipment: (id, payload) =>
+    jfetch(`${EQUIP_BASE}/${id}`, { method: "PUT", body: payload }),
+  deleteEquipment: (id) =>
+    jfetch(`${EQUIP_BASE}/${id}`, { method: "DELETE" }),
 };

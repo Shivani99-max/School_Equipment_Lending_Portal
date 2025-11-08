@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Header() {
   const nav = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  const isAdmin = user && (user.role === "admin" || user.role === "staff");
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -31,19 +32,14 @@ export default function Header() {
 
         {/* RIGHT (only show after login) */}
         {user && (
-          <nav style={{display:"flex", gap:"32px", paddingRight:"40px"}}>
-            <Link to="/equipment" style={{color:"#fff", textDecoration:"none"}}>Equipments</Link>
-            <Link to="/my" style={{color:"#fff", textDecoration:"none"}}>My Requests</Link>
+  <nav style={{display:"flex", gap:"32px", paddingRight:"40px"}}>
+    <Link to="/equipment" style={{color:"#fff", textDecoration:"none"}}>Equipments</Link>
+    <Link to="/my" style={{color:"#fff", textDecoration:"none"}}>My Requests</Link>
+    {isAdmin && <Link to="/admin" style={{color:"#fff", textDecoration:"none"}}>Admin</Link>}
+    <span onClick={logout} style={{color:"#fff", cursor:"pointer"}}>Logout</span>
+  </nav>
+)}
 
-            {/* LOGOUT BUTTON */}
-            <span
-              onClick={logout}
-              style={{color:"#fff", textDecoration:"none", cursor:"pointer"}}
-            >
-              Logout
-            </span>
-          </nav>
-        )}
       </div>
     </header>
   );

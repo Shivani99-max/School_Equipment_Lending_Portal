@@ -29,3 +29,49 @@ def add_equipment():
     cursor.close()
     conn.close()
     return jsonify({"message": "Equipment added"}), 201
+
+
+# UPDATE equipment
+@equipment_bp.route("/equipment/<int:eid>", methods=["PUT"])
+def update_equipment(eid):
+    data = request.get_json() or {}
+    fields = []
+    params = []
+
+    for col in ["name", "category", "condition_status", "quantity", "available_quantity"]:
+        if col in data:
+            fields.append(f"{col}=%s")
+            params.append(data[col])
+
+    if not fields:
+        return jsonify({"error": "No fields to update"}), 400
+
+    params.append(eid)
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(f"UPDATE equipment SET {', '.join(fields)} WHERE id=%s", tuple(params))
+    conn.commit()
+    cur.close(); conn.close()
+    return jsonify({"message": "updated"}), 200
+
+
+# DELETE equipment
+@equipment_bp.route("/equipment/<int:eid>", methods=["DELETE"])
+def delete_equipment(eid):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # optional: check if equipment is currently borrowed (pending/approved)
+    cur.execute("""
+        SELECT COUNT(*) FROM requests
+        WHERE equipment_id=%s AND status IN ('pending','approved')
+    """, (eid,))
+    (active_count,) = cur.fetchone()
+    if active_count:
+        cur.close(); conn.close()
+        return jsonify({"error":"Cannot delete: active requests exist"}), 400
+
+    cur.execute("DELETE FROM equipment WHERE id=%s", (eid,))
+    conn.commit()
+    cur.close(); conn.close()
+    return jsonify({"message": "deleted"}), 200
+
